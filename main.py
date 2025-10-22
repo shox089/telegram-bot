@@ -29,11 +29,15 @@ main_menu.row("🎥 Video/MP3 yuklash")
 main_menu.row("🌤 Ob-havo", "🧮 Kalkulyator")
 main_menu.row("👤 Admin haqida")
 
-# 🌍 Viloyatlar menyusi
+# 🌍 Viloyatlar menyusi (shahar markazlari bilan)
 regions = [
     "Toshkent", "Andijon", "Farg‘ona", "Namangan", "Samarqand", "Buxoro",
-    "Xorazm", "Qashqadaryo", "Surxondaryo", "Jizzax", "Sirdaryo", "Navoiy"
+    "Urganch",      # Xorazm viloyati uchun
+    "Qashqadaryo", "Termiz",  # Surxondaryo viloyati uchun
+    "Jizzax", "Sirdaryo", "Navoiy",
+    "Nukus"         # Qoraqalpog‘iston
 ]
+
 regions_menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
 for i in range(0, len(regions), 2):
     regions_menu.row(*regions[i:i + 2])
@@ -111,3 +115,4 @@ if __name__ == '__main__':
         host=WEBAPP_HOST,
         port=WEBAPP_PORT,
     )
+
