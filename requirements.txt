@@ -1,5 +1,10 @@
 aiogram==2.25.1
-yt-dlp
+flask
+pytube
+instaloader
 requests
 ffmpeg-python
 sqlite3-binary
+aiohttp
+async-timeout
+pytz
