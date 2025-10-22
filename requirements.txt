@@ -4,6 +4,6 @@ pytube
 instaloader
 requests
 ffmpeg-python
-aiohttp
-async-timeout
+aiohttp==3.8.6
+async-timeout==4.0.3
 pytz
