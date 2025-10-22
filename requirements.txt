@@ -4,7 +4,6 @@ pytube
 instaloader
 requests
 ffmpeg-python
-sqlite3-binary
 aiohttp
 async-timeout
 pytz
