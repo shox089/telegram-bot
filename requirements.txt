@@ -7,3 +7,4 @@ ffmpeg-python
 aiohttp==3.8.6
 async-timeout==4.0.3
 pytz
+yt-dlp
