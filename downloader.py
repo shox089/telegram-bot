@@ -7,7 +7,13 @@ def download_media(url, format_choice="best"):
 
     ydl_opts = {
         'outtmpl': f'{folder}/%(title)s.%(ext)s',
-        'format': format_choice
+        'format': format_choice,
+        'noplaylist': True,
+        'quiet': True,
+        'nocheckcertificate': True,
+        # 👇 YouTube shorts himoyasini chetlab o‘tish uchun:
+        'extractor_args': {'youtube': {'player_client': ['android']}},
+        'retries': 5,
     }
 
     try:
