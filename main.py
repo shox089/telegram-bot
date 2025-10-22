@@ -4,7 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 # Bot tokenini Render da Environment Variables orqali olamiz
 import os
-TOKEN = os.getenv("8485966159:AAE63BOncpVTfzN7NL04Em5DUTK05HXUjnE")
+TOKEN = os.getenv("BOT_TOKEN")
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -59,3 +59,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
