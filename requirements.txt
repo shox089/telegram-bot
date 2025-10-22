@@ -1,5 +1,5 @@
-python-telegram-bot==20.3
+aiogram==2.25.1
+yt-dlp
 requests
-pytube
-instaloader
 ffmpeg-python
+sqlite3-binary
