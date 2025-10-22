@@ -1,18 +1,27 @@
 import logging
-import threading
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils.executor import start_webhook
 from config import BOT_TOKEN, ADMIN_ID
 from downloader import download_media
 from weather import get_weather
 from calculator import calculate
 from database import add_or_update_user, get_user_count
-from flask import Flask
 import os
 
-# 🔹 Telegram botni ishga tushirish
+# 🔹 Logging
+logging.basicConfig(level=logging.INFO)
+
+# 🔹 Botni sozlash
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
-logging.basicConfig(level=logging.INFO)
+
+# 🔹 Webhook konfiguratsiyasi
+WEBHOOK_HOST = 'https://telegram-bot-fsph.onrender.com'  # 🔸 Render URL'ing
+WEBHOOK_PATH = '/webhook'
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+
+WEBAPP_HOST = "0.0.0.0"
+WEBAPP_PORT = int(os.environ.get("PORT", 10000))
 
 # 📍 Asosiy menyu
 main_menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -82,20 +91,23 @@ async def calc_handler(message: types.Message):
     result = calculate(message.text)
     await message.answer(f"🧮 Natija: {result}")
 
-# 🌐 Flask server Render uchun
-app = Flask(__name__)
+# 🚀 Webhook funksiyalar
+async def on_startup(dp):
+    await bot.set_webhook(WEBHOOK_URL)
+    print("✅ Webhook o‘rnatildi!")
 
-@app.route('/')
-def home():
-    return "✅ Bot ishlayapti (Render Flask server orqali).", 200
+async def on_shutdown(dp):
+    await bot.delete_webhook()
+    print("🛑 Webhook o‘chirildi.")
 
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-def run_bot():
-    executor.start_polling(dp, skip_updates=True)
-
+# 🔹 Webhook serverni ishga tushirish
 if __name__ == '__main__':
-    threading.Thread(target=run_web).start()
-    run_bot()
+    start_webhook(
+        dispatcher=dp,
+        webhook_path=WEBHOOK_PATH,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown,
+        skip_updates=True,
+        host=WEBAPP_HOST,
+        port=WEBAPP_PORT,
+    )
