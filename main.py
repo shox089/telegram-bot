@@ -1,4 +1,6 @@
 import logging
+import os
+import shutil
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils.executor import start_webhook
 from config import BOT_TOKEN, ADMIN_ID
@@ -6,7 +8,7 @@ from downloader import download_media
 from weather import get_weather
 from calculator import calculate
 from database import add_or_update_user, get_user_count
-import os
+import asyncio
 
 # 🔹 Logging
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +18,7 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 # 🔹 Webhook konfiguratsiyasi
-WEBHOOK_HOST = 'https://telegram-bot-fsph.onrender.com'  # 🔸 Render URL'ing
+WEBHOOK_HOST = 'https://telegram-bot-fsph.onrender.com'  # Render URL
 WEBHOOK_PATH = '/webhook'
 WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
@@ -29,15 +31,11 @@ main_menu.row("🎥 Video/MP3 yuklash")
 main_menu.row("🌤 Ob-havo", "🧮 Kalkulyator")
 main_menu.row("👤 Admin haqida")
 
-# 🌍 Viloyatlar menyusi (shahar markazlari bilan)
+# 🌍 Viloyatlar menyusi
 regions = [
     "Toshkent", "Andijon", "Farg‘ona", "Namangan", "Samarqand", "Buxoro",
-    "Urganch",      # Xorazm viloyati uchun
-    "Qashqadaryo", "Termiz",  # Surxondaryo viloyati uchun
-    "Jizzax", "Sirdaryo", "Navoiy",
-    "Nukus"         # Qoraqalpog‘iston
+    "Urganch", "Qashqadaryo", "Termiz", "Jizzax", "Sirdaryo", "Navoiy", "Nukus"
 ]
-
 regions_menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
 for i in range(0, len(regions), 2):
     regions_menu.row(*regions[i:i + 2])
@@ -83,9 +81,15 @@ async def back_to_main(message: types.Message):
 # 🔗 Media yuklash
 @dp.message_handler(lambda msg: msg.text.startswith("http"))
 async def handle_download(message: types.Message):
-    file_path = download_media(message.text)
-    if file_path:
+    await message.answer("📥 Yuklanmoqda...")
+    file_path = await download_media(message.text)
+    if file_path and os.path.exists(file_path):
         await message.answer_document(open(file_path, 'rb'))
+        # Faylni yuborilgach o‘chirib tashlash
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            print(f"Faylni o‘chirishda xato: {e}")
     else:
         await message.answer("❌ Yuklashda xatolik yuz berdi.")
 
@@ -115,4 +119,3 @@ if __name__ == '__main__':
         host=WEBAPP_HOST,
         port=WEBAPP_PORT,
     )
-
