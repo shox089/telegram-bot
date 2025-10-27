@@ -1,0 +1,7 @@
+aiogram==3.1.0
+aiosqlite
+yt-dlp
+youtubesearchpython
+pydub
+shazamio
+matplotlib
