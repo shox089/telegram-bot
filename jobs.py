@@ -3,14 +3,23 @@ from datetime import datetime, timedelta
 from utils import load_json, log_error
 from db import DB_FILE
 import aiosqlite
+import asyncio
 
 scheduler = AsyncIOScheduler()
 
 def scheduler_start(bot):
-    scheduler.add_job(daily_summary, 'interval', hours=24, next_run_time=datetime.now() + timedelta(seconds=10))
+    """
+    Schedulerni ishga tushiradi va kunlik xulosani yuboradi.
+    """
+    # daily_summary funksiyasiga bot obyektini uzatish
+    scheduler.add_job(lambda: asyncio.create_task(daily_summary(bot)), 
+                      'interval', hours=24, next_run_time=datetime.now() + timedelta(seconds=10))
     scheduler.start()
 
-async def daily_summary():
+async def daily_summary(bot):
+    """
+    Har bir foydalanuvchiga kunlik xulosa xabarini yuboradi.
+    """
     users = load_json("users.json")
     for uid_str in users.keys():
         try:
