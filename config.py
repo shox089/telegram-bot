@@ -1,8 +1,7 @@
 import os
-from datetime import datetime
 
-API_TOKEN = "YOUR_TOKEN_HERE"
-ADMIN_ID = 6688725338
+API_TOKEN = os.getenv("API_TOKEN")      # Renderdan oladi
+ADMIN_ID = int(os.getenv("ADMIN_ID"))   # Renderdan oladi
 
 DOWNLOAD_PATH = "downloads"
 os.makedirs(DOWNLOAD_PATH, exist_ok=True)
