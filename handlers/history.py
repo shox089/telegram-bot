@@ -1,4 +1,5 @@
 from aiogram import types, F
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import load_json, save_json
 
 LOG_FILE = "downloads_log.json"
@@ -6,14 +7,19 @@ LOG_FILE = "downloads_log.json"
 async def show_history(message: types.Message):
     user_id = str(message.from_user.id)
     logs = load_json(LOG_FILE)
+
     if user_id not in logs or not logs[user_id]:
         await message.answer("📂 Sizda hali tarix mavjud emas.")
         return
+
     history_list = logs[user_id][-15:]
     text = "📂 <b>Oxirgi topilgan yoki yuklab olingan qo‘shiqlaringiz:</b>\n\n"
     for i, title in enumerate(reversed(history_list), 1):
         text += f"{i}. {title}\n"
-    clear_btn = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("🗑 Tarixni tozalash", callback_data="clear_history")]])
+
+    clear_btn = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton("🗑 Tarixni tozalash", callback_data="clear_history")]]
+    )
     await message.answer(text, parse_mode="HTML", reply_markup=clear_btn)
 
 async def clear_history(callback: types.CallbackQuery):
