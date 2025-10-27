@@ -13,68 +13,64 @@ def register_handlers(dp):
 
 # ================= AUDIO / VIDEO PROCESSING =================
 async def handle_audio_video(message: types.Message):
-    """
-    Audio yoki video faylni qabul qiladi,
-    Shazam bilan aniqlaydi,
-    MP3 ga konvert qiladi va foydalanuvchiga yuboradi.
-    """
     shazam = Shazam()
     status_msg = await message.answer("⏳ Fayl qabul qilinmoqda...")
-    
+
+    ogg_path = wav_path = video_path = None
+
     try:
-        # Ovozli fayl
+        # ===== Ovozli fayl =====
         if message.voice or message.audio:
             file_id = message.voice.file_id if message.voice else message.audio.file_id
             file = await bot.get_file(file_id)
-            ogg_path = f"{DOWNLOAD_PATH}/{message.from_user.id}_audio.ogg"
-            wav_path = f"{DOWNLOAD_PATH}/{message.from_user.id}_audio.wav"
+            ogg_path = os.path.join(DOWNLOAD_PATH, f"{message.from_user.id}_audio.ogg")
+            wav_path = os.path.join(DOWNLOAD_PATH, f"{message.from_user.id}_audio.wav")
             await bot.download_file(file.file_path, ogg_path)
             audio = AudioSegment.from_file(ogg_path)
             audio.export(wav_path, format="wav")
-            os.remove(ogg_path)
 
-        # Video fayl
+        # ===== Video fayl =====
         elif message.video:
             file = await bot.get_file(message.video.file_id)
-            video_path = f"{DOWNLOAD_PATH}/{message.from_user.id}_video.mp4"
-            wav_path = f"{DOWNLOAD_PATH}/{message.from_user.id}_video.wav"
+            video_path = os.path.join(DOWNLOAD_PATH, f"{message.from_user.id}_video.mp4")
+            wav_path = os.path.join(DOWNLOAD_PATH, f"{message.from_user.id}_video.wav")
             await bot.download_file(file.file_path, video_path)
-            subprocess.run(["ffmpeg", "-y", "-i", video_path, "-vn", "-ac", "2", "-ar", "44100", wav_path],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            os.remove(video_path)
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", video_path, "-vn", "-ac", "2", "-ar", "44100", wav_path],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
         else:
             await status_msg.edit_text("❌ Fayl topilmadi.")
             return
 
-        # Duration tekshirish
+        # ===== Duration tekshirish =====
         audio_seg = AudioSegment.from_file(wav_path)
         duration = len(audio_seg) / 1000.0
         if duration < 8:
-            os.remove(wav_path)
             await status_msg.edit_text("❌ Audio juda qisqa. Kamida 8 soniya bo'lishi kerak.")
             return
 
-        # Shazam bilan aniqlash
+        # ===== Shazam bilan aniqlash =====
         await status_msg.edit_text("🔍 Shazam tahlil qilmoqda...")
         try:
             shazam_out = await shazam.recognize(wav_path)
+            track_info = shazam_out.get("track", {}) if shazam_out else {}
         except Exception as e:
             log_error(f"Shazam recognize error: {e}")
-            shazam_out = None
-        os.remove(wav_path)
+            track_info = {}
 
-        if not shazam_out or not shazam_out.get("track"):
+        if not track_info:
             await status_msg.edit_text("❌ Qo‘shiq topilmadi. Matn orqali nomini yuboring.")
             return
 
-        shazam_title = shazam_out["track"].get("title", "Noma'lum")
-        shazam_artist = shazam_out["track"].get("subtitle", "Noma'lum")
+        shazam_title = track_info.get("title", "Noma'lum")
+        shazam_artist = track_info.get("subtitle", "Noma'lum")
         found_song = f"{shazam_artist} - {shazam_title}"
 
-        # Foydalanuvchi statistikasi yangilash
+        # ===== Foydalanuvchi statistikasi =====
         await update_user_stats(message.from_user.id, message.from_user.username or "", shazam_artist, shazam_title, None)
 
-        # YouTube qidiruvi (topilgan qo‘shiq)
+        # ===== YouTube qidiruvi =====
         results = await search_youtube(found_song, limit=1)
         if results:
             user_search_results[message.from_user.id] = results
@@ -92,3 +88,12 @@ async def handle_audio_video(message: types.Message):
     except Exception as e:
         log_error(f"audio.py error: {e}")
         await status_msg.edit_text("❌ Audio/video bilan ishlashda xatolik yuz berdi.")
+    
+    finally:
+        # ===== Fayllarni xavfsiz o'chirish =====
+        for path in [ogg_path, wav_path, video_path]:
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except:
+                    pass
