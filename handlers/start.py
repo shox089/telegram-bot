@@ -5,7 +5,7 @@ from utils import load_json, save_json
 from keyboards import main_reply_keyboard
 from config import ADMIN_ID
 
-async def start_cmd(message: types.Message, dp=None):
+async def start_cmd(message: types.Message):
     users = load_json("users.json")
     user_id = str(message.from_user.id)
     if user_id not in users:
