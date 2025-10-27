@@ -2,97 +2,99 @@ import os
 import json
 import re
 from datetime import datetime
-from config import LOG_FILE, USER_FILE, ERROR_LOG, DOWNLOAD_PATH
+from config import LOG_FILE, USER_FILE, ERROR_LOG
 
 # ---------------------------
-# Log va Error funksiyalari
+# Xatoliklarni log qilish
 # ---------------------------
 def log_error(msg: str):
-    """Xatoliklarni log faylga yozadi"""
     with open(ERROR_LOG, "a", encoding="utf-8") as f:
         f.write(f"[{datetime.now().isoformat()}] {msg}\n")
 
-def log_download(user_id: int, filename: str):
-    """Foydalanuvchi yuklagan fayllarni loglash"""
-    data = load_json(LOG_FILE)
-    if str(user_id) not in data:
-        data[str(user_id)] = []
-    data[str(user_id)].append({
-        "file": filename,
-        "time": datetime.now().isoformat()
-    })
-    save_json(LOG_FILE, data)
+# ---------------------------
+# Fayl nomini tozalash
+# ---------------------------
+def clean_filename(name: str) -> str:
+    return re.sub(r'[\\/*?:"<>|]', "", name) if name else "unknown"
 
 # ---------------------------
-# JSON fayllarni boshqarish
+# JSON faylini yuklash
 # ---------------------------
 def load_json(path):
-    """JSON faylni yuklash"""
     if not os.path.exists(path):
         return {}
     with open(path, "r", encoding="utf-8") as f:
         try:
             return json.load(f)
         except Exception as e:
-            log_error(f"load_json error ({path}): {e}")
+            log_error(f"JSON load error ({path}): {e}")
             return {}
 
+# ---------------------------
+# JSON faylini saqlash
+# ---------------------------
 def save_json(path, data):
-    """JSON faylni saqlash"""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 # ---------------------------
-# Foydalanuvchi fayllari
+# Foydalanuvchi statistikasi
 # ---------------------------
-def add_user(user_id: int, username: str = None):
-    """Foydalanuvchini users.json ga qo'shish"""
+def update_user_stats(user_id: int, key: str, increment: int = 1):
+    """Foydalanuvchi statistikasi uchun raqamni oshiradi"""
     users = load_json(USER_FILE)
-    if str(user_id) not in users:
-        users[str(user_id)] = {
-            "username": username,
-            "joined": datetime.now().isoformat()
-        }
-        save_json(USER_FILE, users)
+    str_id = str(user_id)
+    if str_id not in users:
+        users[str_id] = {"stats": {}, "joined": datetime.now().isoformat()}
+    if "stats" not in users[str_id]:
+        users[str_id]["stats"] = {}
+    if key not in users[str_id]["stats"]:
+        users[str_id]["stats"][key] = 0
+    users[str_id]["stats"][key] += increment
+    save_json(USER_FILE, users)
 
 # ---------------------------
-# Fayl nomini tozalash
+# YouTube qidiruv natijalarini saqlash va sahifalash
 # ---------------------------
-def clean_filename(name: str) -> str:
-    """Fayl nomidagi noqonuniy belgilarni olib tashlaydi"""
-    return re.sub(r'[\\/*?:"<>|]', "", name) if name else "unknown"
+user_search_results_data = {}
+
+def user_search_results(user_id: int):
+    """Foydalanuvchining qidiruv natijalarini qaytaradi"""
+    return user_search_results_data.get(user_id, [])
+
+def user_pages(user_id: int, page_size: int = 5):
+    """Natijalarni sahifalash uchun generator"""
+    results = user_search_results(user_id)
+    for i in range(0, len(results), page_size):
+        yield results[i:i+page_size]
+
+def show_results(user_id: int, page: int = 0):
+    """Berilgan sahifani qaytaradi"""
+    pages = list(user_pages(user_id))
+    if not pages:
+        return []
+    if page < 0 or page >= len(pages):
+        return pages[0]
+    return pages[page]
 
 # ---------------------------
-# Qidiruv va natijalarni boshqarish
+# Log fayllarini yaratish
 # ---------------------------
-def user_search_results(query: str, data: list) -> list:
-    """Data ichidan query bo‘yicha mos keladigan natijalarni topadi"""
-    return [item for item in data if query.lower() in item.lower()]
-
-def user_pages(results: list, page: int = 1, per_page: int = 5) -> list:
-    """Natijalarni sahifalash"""
-    start = (page - 1) * per_page
-    end = start + per_page
-    return results[start:end]
-
-def show_results(results: list) -> str:
-    """Natijalarni string ko‘rinishida formatlash"""
-    if not results:
-        return "Natija topilmadi."
-    return "\n".join(results)
-
-# ---------------------------
-# Download papkasini yaratish
-# ---------------------------
-os.makedirs(DOWNLOAD_PATH, exist_ok=True)
-
-# ---------------------------
-# Log fayllarni yaratish
-# ---------------------------
-for file in [LOG_FILE, USER_FILE, ERROR_LOG]:
+for file in [LOG_FILE, USER_FILE]:
     if not os.path.exists(file):
-        if file.endswith(".json"):
-            save_json(file, {})
-        else:
-            with open(file, "w", encoding="utf-8") as f:
-                f.write("")
+        save_json(file, {})
+
+# ---------------------------
+# Download log yozish
+# ---------------------------
+def log_download(user_id: int, item: dict):
+    """Yuklashlarni log qilish"""
+    logs = load_json(LOG_FILE)
+    str_id = str(user_id)
+    if str_id not in logs:
+        logs[str_id] = []
+    logs[str_id].append({
+        "time": datetime.now().isoformat(),
+        "item": item
+    })
+    save_json(LOG_FILE, logs)
