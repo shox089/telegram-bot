@@ -1,8 +1,0 @@
-aiogram==2.25.1
-yt-dlp==2025.10.14
-pytube==15.0.0
-instaloader==4.14.2
-ffmpeg-python==0.2.0
-pytz==2025.2
-requests==2.32.5
-aiohttp==3.8.6
