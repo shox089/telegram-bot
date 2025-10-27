@@ -1,20 +1,23 @@
+import os
+import subprocess
+import json
+from datetime import datetime
+from urllib.parse import quote_plus, unquote_plus
+
 from aiogram import types, F, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup, FSInputFile
-from urllib.parse import quote_plus, unquote_plus
-from config import ADMIN_ID, DOWNLOAD_PATH, LOG_FILE, USER_FILE
-from utils import log_error, load_json, save_json, clean_filename
-from db import update_user_stats
-from youtube import search_youtube, download_mp3
-import os
-import subprocess
-from datetime import datetime
 from pydub import AudioSegment
 from shazamio import Shazam
 import matplotlib.pyplot as plt
 import aiosqlite
 
-# In-memory search structures
+from config import ADMIN_ID, DOWNLOAD_PATH, LOG_FILE, USER_FILE
+from utils import log_error, load_json, save_json, clean_filename
+from db import update_user_stats
+from youtube import search_youtube, download_mp3
+
+# In-memory search
 user_search_results = {}   # {user_id: [ {title,link,duration,thumbnail,views,published}, ... ]}
 user_pages = {}            # {user_id: page_index}
 
