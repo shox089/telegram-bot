@@ -7,16 +7,22 @@ async def choose_callback(callback: types.CallbackQuery):
     try:
         user_id = callback.from_user.id
         index = int(callback.data.split("::")[1]) - 1
-        results = user_search_results.get(user_id)
+        results = user_search_results(user_id)
         if not results or index >= len(results):
             await callback.answer("❌ Topilmadi.")
             return
+
         song = results[index]
-        title = song.get("title")
+        title = song.get("title", "Unknown")
         link = song.get("link")
         kb = make_song_action_kb(link, title, "Unknown")
+
         await callback.message.edit_text(f"🎵 <b>{title}</b>", parse_mode="HTML", reply_markup=kb)
-        await download_mp3_and_send(user_id, title, link, callback.message)
+        await download_mp3_and_send(link, callback.message)
+
+        # Statistika yangilash
+        update_user_stats(user_id, "downloads")
+
     except Exception as e:
         log_error(f"choose_callback error: {e}")
         await callback.answer("❌ Xatolik yuz berdi.")
