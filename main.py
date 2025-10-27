@@ -9,14 +9,29 @@ from audio import audio_handlers
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
+# ---------------------------
+# Handlerlarni ro'yxatga olish
+# ---------------------------
+def register_all_handlers(dp):
+    start.register_handlers(dp)
+    search.register_handlers(dp)
+    choose.register_handlers(dp)
+    favorites.register_handlers(dp)
+    profile.register_handlers(dp)
+    history.register_handlers(dp)
+    admin.register_handlers(dp)
+    recommend.register_handlers(dp)
+    top_users.register_handlers(dp)
+    audio_handlers.register_handlers(dp)
+
 async def on_startup():
     await init_db()
-    scheduler_start(bot)
+    register_all_handlers(dp)
+    scheduler_start(bot)  # botni schedulerga uzatadi
 
 async def main():
     print("🤖 Bot ishga tushdi...")
     await on_startup()
-    # handlers import qilinishi bilan avtomatik ro‘yxatga olinadi
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
