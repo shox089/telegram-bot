@@ -4,6 +4,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import load_json, save_json, log_error
 from keyboards import main_reply_keyboard
 from config import ADMIN_ID
+import os
+import json
 
 
 # =======================
@@ -11,11 +13,18 @@ from config import ADMIN_ID
 # =======================
 async def start_cmd(message: types.Message):
     try:
-        users = load_json("users.json")
         user_id = str(message.from_user.id)
+        users_file = "users.json"
+
+        # Fayl mavjud bo‘lmasa, yaratamiz
+        if not os.path.exists(users_file):
+            with open(users_file, "w", encoding="utf-8") as f:
+                json.dump({}, f)
+
+        users = load_json(users_file)
 
         # Yangi foydalanuvchi — til tanlash bosqichi
-        if user_id not in users:
+        if user_id not in users or "lang" not in users[user_id]:
             kb_lang = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [InlineKeyboardButton(text="🇺🇿 O‘zbek", callback_data="lang_uz")],
@@ -48,7 +57,10 @@ async def set_language(callback: types.CallbackQuery):
         users[user_id]["lang"] = lang
         save_json("users.json", users)
 
+        # Asosiy menyuga qaytamiz
+        kb_main = main_reply_keyboard(is_admin=(callback.from_user.id == ADMIN_ID))
         await callback.message.edit_text("✅ Til saqlandi! Endi asosiy menyuga qayting.")
+        await callback.message.answer("👋 Salom! Nima qilamiz?", reply_markup=kb_main)
         await callback.answer()
 
     except Exception as e:
