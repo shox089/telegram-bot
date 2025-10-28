@@ -3,17 +3,20 @@ from aiogram.filters import Command
 from utils import DB_FILE, log_error
 import aiosqlite
 
-
 # =======================
 # 🏆 Eng faol foydalanuvchilar komandasi
 # =======================
 async def top_command(message: types.Message):
+    """
+    Top 5 eng faol foydalanuvchilarni ko‘rsatadi
+    (songs_found bo‘yicha tartiblangan)
+    """
     try:
         async with aiosqlite.connect(DB_FILE) as db:
-            cur = await db.execute(
+            cursor = await db.execute(
                 "SELECT username, songs_found FROM users ORDER BY songs_found DESC LIMIT 5"
             )
-            rows = await cur.fetchall()
+            rows = await cursor.fetchall()
 
         if not rows:
             await message.answer("🏆 Hozircha foydalanuvchilar ro‘yxati bo‘sh.")
