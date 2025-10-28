@@ -2,13 +2,18 @@ import os
 import json
 import re
 from datetime import datetime
-from config import LOG_FILE, USER_FILE, ERROR_LOG
 
 # ---------------------------
-# Bazaviy fayl yo'llari
+# Ma'lumotlar uchun xavfsiz papka
 # ---------------------------
-# Agar loyihangizda ma'lumotlar bazasi fayli kerak bo'lsa
-DB_FILE = "database.json"
+DATA_DIR = "/opt/render/project/src/data"
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Fayl nomlari
+DB_FILE = os.path.join(DATA_DIR, "database.json")
+LOG_FILE = os.path.join(DATA_DIR, "downloads.json")
+USER_FILE = os.path.join(DATA_DIR, "users.json")
+ERROR_LOG = os.path.join(DATA_DIR, "errors.log")
 
 # ---------------------------
 # Xatoliklarni log qilish
@@ -32,20 +37,23 @@ def load_json(path):
     """JSON faylini yuklaydi, xatolik bo'lsa bo'sh lug'at qaytaradi"""
     if not os.path.exists(path):
         return {}
-    with open(path, "r", encoding="utf-8") as f:
-        try:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-        except Exception as e:
-            log_error(f"JSON load error ({path}): {e}")
-            return {}
+    except Exception as e:
+        log_error(f"JSON load error ({path}): {e}")
+        return {}
 
 # ---------------------------
 # JSON faylini saqlash
 # ---------------------------
 def save_json(path, data):
     """Ma'lumotni JSON fayliga yozadi"""
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        log_error(f"JSON save error ({path}): {e}")
 
 # ---------------------------
 # Foydalanuvchi statistikasi
@@ -56,11 +64,7 @@ def update_user_stats(user_id: int, key: str, increment: int = 1):
     str_id = str(user_id)
     if str_id not in users:
         users[str_id] = {"stats": {}, "joined": datetime.now().isoformat()}
-    if "stats" not in users[str_id]:
-        users[str_id]["stats"] = {}
-    if key not in users[str_id]["stats"]:
-        users[str_id]["stats"][key] = 0
-    users[str_id]["stats"][key] += increment
+    users[str_id]["stats"][key] = users[str_id]["stats"].get(key, 0) + increment
     save_json(USER_FILE, users)
 
 # ---------------------------
@@ -76,7 +80,7 @@ def user_pages(user_id: int, page_size: int = 5):
     """Natijalarni sahifalash uchun generator"""
     results = user_search_results(user_id)
     for i in range(0, len(results), page_size):
-        yield results[i:i+page_size]
+        yield results[i:i + page_size]
 
 def show_results(user_id: int, page: int = 0):
     """Berilgan sahifani qaytaradi"""
@@ -88,7 +92,7 @@ def show_results(user_id: int, page: int = 0):
     return pages[page]
 
 # ---------------------------
-# Log fayllarini yaratish
+# Fayllarni yaratish
 # ---------------------------
 for file in [LOG_FILE, USER_FILE, DB_FILE]:
     if not os.path.exists(file):
