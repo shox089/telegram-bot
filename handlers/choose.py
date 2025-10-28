@@ -1,14 +1,12 @@
 from aiogram import types, F
-from utils import (
-    user_search_results,
-    update_user_stats,
-    log_error
-)
+from utils import user_search_results, update_user_stats, log_error
 from keyboards import make_song_action_kb
 from youtube import download_mp3_and_send
 
 
-# 🔘 Foydalanuvchi tanloviga ishlov berish
+# ===========================
+# 🔘 Foydalanuvchi tanlov callback
+# ===========================
 async def choose_callback(callback: types.CallbackQuery):
     try:
         user_id = callback.from_user.id
@@ -19,31 +17,36 @@ async def choose_callback(callback: types.CallbackQuery):
             return
 
         index = int(data_parts[1]) - 1
-        results = user_search_results(user_id)
+        results = user_search_results.get(user_id, [])
 
         if not results or index >= len(results):
             await callback.answer("❌ Natija topilmadi.")
             return
 
         song = results[index]
-        title = song.get("title", "Unknown")
+        title = song.get("title", "Noma'lum")
         link = song.get("link")
-        artist = song.get("channel", "Unknown artist")
+        artist = song.get("channel") or song.get("publisher") or "Noma'lum ijrochi"
 
+        if not link:
+            await callback.answer("❌ Havola topilmadi.")
+            return
+
+        # Inline tugmalar
         kb = make_song_action_kb(link, title, artist)
 
-        # 🎵 Qo‘shiq nomini ko‘rsatish
+        # 🎵 Qo‘shiq ma’lumotini yangilab ko‘rsatish
         await callback.message.edit_text(
-            f"🎵 <b>{title}</b>\n👤 {artist}",
+            f"🎵 <b>{title}</b>\n👤 {artist}\n\n⏳ MP3 yuklanmoqda...",
             parse_mode="HTML",
             reply_markup=kb
         )
 
-        # 🎧 MP3 ni yuklab yuborish
+        # 🎧 MP3 yuklab yuborish
         await download_mp3_and_send(link, callback.message)
 
         # 📊 Foydalanuvchi statistikasi yangilanadi
-        update_user_stats(user_id, "downloads")
+        await update_user_stats(user_id, "downloads")
 
         await callback.answer()
 
@@ -55,6 +58,8 @@ async def choose_callback(callback: types.CallbackQuery):
             pass
 
 
-# 🔗 Handlerni ro‘yxatdan o‘tkazish
+# ===========================
+# 🔗 Handler ro‘yxatdan o‘tkazish
+# ===========================
 def register_handlers(dp):
     dp.callback_query.register(choose_callback, F.data.startswith("choose::"))
