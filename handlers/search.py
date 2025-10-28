@@ -1,71 +1,96 @@
 from aiogram import types, F
 from youtube import search_youtube
-from utils import user_search_results, user_pages, show_results, log_error
+from utils import user_search_results, show_results, log_error
+from keyboards import make_song_action_kb, pagination_kb
+from config import RESULTS_PER_PAGE
 
-
-# =======================
-# 🔍 Matn orqali qidiruv
-# =======================
+# ===========================
+# 🔍 YouTube qidiruv handler
+# ===========================
 async def text_search(message: types.Message):
-    # Agar matn yo'q bo‘lsa (masalan, foydalanuvchi rasm, ovoz yoki fayl yuborsa) — e’tibor bermaymiz
-    if not message.text:
+    """
+    Foydalanuvchi matn yuborganda YouTube'da qidiruv amalga oshiradi.
+    """
+    if not message.text or message.text.startswith("/"):
         return
 
     query = message.text.strip()
-
-    # Buyruqlarni inkor etamiz (masalan /start, /help)
-    if not query or query.startswith("/"):
-        return
+    status_msg = await message.answer(f"🔎 Qidirilmoqda: <b>{query}</b>", parse_mode="HTML")
 
     try:
-        status_msg = await message.answer(f"🔎 Qidirilmoqda: <b>{query}</b>", parse_mode="HTML")
-
-        # YouTube'dan natijalar olish
-        results = await search_youtube(query, limit=20)
-
+        results = await search_youtube(query, limit=30)
         if not results:
-            await status_msg.edit_text("❌ YouTube’da hech narsa topilmadi.")
+            await status_msg.edit_text("❌ Hech narsa topilmadi.")
             return
 
-        # Foydalanuvchi uchun natijalarni saqlash
+        # Foydalanuvchi natijalarini saqlash
         user_search_results[message.from_user.id] = results
-        user_pages[message.from_user.id] = 0
 
-        # Natijalarni ko‘rsatish
-        await show_results(message.from_user.id, status_msg)
+        # Birinchi sahifani ko‘rsatamiz
+        await show_results_page(message, user_id=message.from_user.id, page=0)
 
     except Exception as e:
         log_error(f"text_search error: {e}")
-        await message.answer("❌ Qidiruvda xatolik yuz berdi.")
+        await message.answer("⚠️ Qidiruvda xatolik yuz berdi.")
 
 
-# =======================
-# ⏩ Sahifani almashtirish
-# =======================
+# ===========================
+# 📄 Sahifa ko‘rsatish funksiyasi
+# ===========================
+async def show_results_page(message_or_callback, user_id: int, page: int):
+    """
+    Berilgan foydalanuvchi uchun sahifalangan qidiruv natijalarini ko‘rsatadi.
+    """
+    results = user_search_results.get(user_id, [])
+    if not results:
+        await message_or_callback.answer("❌ Natijalar topilmadi.")
+        return
+
+    total_pages = (len(results) + RESULTS_PER_PAGE - 1) // RESULTS_PER_PAGE
+    start = page * RESULTS_PER_PAGE
+    end = start + RESULTS_PER_PAGE
+    items = results[start:end]
+
+    # Har bir video uchun alohida xabar
+    text_lines = [f"<b>Sahifa {page+1}/{total_pages}</b>\n"]
+    for idx, item in enumerate(items, start=start + 1):
+        text_lines.append(
+            f"🎵 <b>{item['title']}</b>\n"
+            f"⏱ {item['duration']} | 👁 {item['views']} | 📅 {item['published']}\n"
+            f"🔗 {item['link']}\n"
+        )
+
+    text = "\n".join(text_lines)
+
+    # Pagination tugmalari
+    keyboard = pagination_kb(page, total_pages)
+
+    if isinstance(message_or_callback, types.Message):
+        await message_or_callback.answer(text, parse_mode="HTML", reply_markup=keyboard)
+    else:
+        await message_or_callback.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+
+
+# ===========================
+# ⏩ Sahifa almashtirish handler
+# ===========================
 async def change_page(callback: types.CallbackQuery):
-    user_id = callback.from_user.id
-
+    """
+    Callback orqali sahifani almashtirish.
+    """
     try:
-        # Sahifani o‘zgartirish
-        if callback.data == "next_page":
-            user_pages[user_id] = user_pages.get(user_id, 0) + 1
-        elif callback.data == "prev_page":
-            user_pages[user_id] = max(0, user_pages.get(user_id, 0) - 1)
-
-        await show_results(user_id, callback.message)
+        _, page_str = callback.data.split("::")
+        page = int(page_str)
+        await show_results_page(callback, user_id=callback.from_user.id, page=page)
         await callback.answer()
-
     except Exception as e:
         log_error(f"change_page error: {e}")
-        await callback.answer("⚠️ Sahifani o‘zgartirishda xatolik.", show_alert=True)
+        await callback.answer("⚠️ Sahifani almashtirishda xatolik.", show_alert=True)
 
 
-# =======================
+# ===========================
 # 🔗 Handlerlarni ro‘yxatdan o‘tkazish
-# =======================
+# ===========================
 def register_handlers(dp):
-    # Faqat matnli xabarlarni ushlash (media emas)
     dp.message.register(text_search, F.text)
-
-    # Inline tugmalar uchun
-    dp.callback_query.register(change_page, F.data.in_(["next_page", "prev_page"]))
+    dp.callback_query.register(change_page, F.data.startswith("page::"))
