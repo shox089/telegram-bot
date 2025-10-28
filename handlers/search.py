@@ -7,10 +7,14 @@ from utils import user_search_results, user_pages, show_results, log_error
 # 🔍 Matn orqali qidiruv
 # =======================
 async def text_search(message: types.Message):
+    # Agar matn yo'q bo‘lsa (masalan, foydalanuvchi rasm, ovoz yoki fayl yuborsa) — e’tibor bermaymiz
+    if not message.text:
+        return
+
     query = message.text.strip()
 
     # Buyruqlarni inkor etamiz (masalan /start, /help)
-    if query.startswith("/"):
+    if not query or query.startswith("/"):
         return
 
     try:
@@ -60,8 +64,8 @@ async def change_page(callback: types.CallbackQuery):
 # 🔗 Handlerlarni ro‘yxatdan o‘tkazish
 # =======================
 def register_handlers(dp):
-    # Har qanday matnli xabar — qidiruv uchun
-    dp.message.register(text_search)
+    # Faqat matnli xabarlarni ushlash (media emas)
+    dp.message.register(text_search, F.text)
 
     # Inline tugmalar uchun
     dp.callback_query.register(change_page, F.data.in_(["next_page", "prev_page"]))
