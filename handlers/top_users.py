@@ -1,7 +1,12 @@
 from aiogram import types
-from utils import DB_FILE
+from aiogram.filters import Command
+from utils import DB_FILE, log_error
 import aiosqlite
 
+
+# =======================
+# 🏆 Eng faol foydalanuvchilar komandasi
+# =======================
 async def top_command(message: types.Message):
     try:
         async with aiosqlite.connect(DB_FILE) as db:
@@ -9,17 +14,25 @@ async def top_command(message: types.Message):
                 "SELECT username, songs_found FROM users ORDER BY songs_found DESC LIMIT 5"
             )
             rows = await cur.fetchall()
-        if not rows:
-            await message.answer("🏆 Hozircha foydalanuvchilar ro'yxati bo'sh.")
-            return
-        text = "🏆 <b>Eng faol foydalanuvchilar:</b>\n\n"
-        for i, (username, count) in enumerate(rows, 1):
-            text += f"{i}. @{username or 'NoName'} — {count} ta qo‘shiq\n"
-        await message.answer(text, parse_mode="HTML")
-    except Exception as e:
-        await message.answer("❌ Xatolik yuz berdi.")
-        from utils import log_error
-        log_error(f"top_command error: {e}")
 
+        if not rows:
+            await message.answer("🏆 Hozircha foydalanuvchilar ro‘yxati bo‘sh.")
+            return
+
+        text = "🏆 <b>Eng faol foydalanuvchilar:</b>\n\n"
+        for i, (username, count) in enumerate(rows, start=1):
+            display_name = f"@{username}" if username else "Anonim foydalanuvchi"
+            text += f"{i}. {display_name} — <b>{count}</b> ta qo‘shiq\n"
+
+        await message.answer(text, parse_mode="HTML")
+
+    except Exception as e:
+        log_error(f"top_command error: {e}")
+        await message.answer("❌ Xatolik yuz berdi, keyinroq urinib ko‘ring.")
+
+
+# =======================
+# 🔗 Handler ro‘yxatdan o‘tkazish
+# =======================
 def register_handlers(dp):
-    dp.message.register(top_command, commands=["top"])
+    dp.message.register(top_command, Command("top"))
