@@ -4,9 +4,9 @@ from aiogram import types, F
 from shazamio import Shazam
 from pydub import AudioSegment
 from bot import bot, DOWNLOAD_PATH
-from utils import log_error, update_user_stats, user_search_results, user_pages
+from utils import log_error, log_download, update_user_stats
 from keyboards import make_song_action_kb
-from youtube import search_youtube  # ✅ To‘g‘ri joydan import
+from youtube import search_youtube  # ✅ YouTube qidiruv funksiyasi
 
 
 # ================= HANDLERS =================
@@ -76,23 +76,23 @@ async def handle_audio_video(message: types.Message):
         found_song = f"{shazam_artist} - {shazam_title}"
 
         # ===== Statistikani yangilash =====
-        await update_user_stats(
-            message.from_user.id,
-            message.from_user.username or "",
-            shazam_artist,
-            shazam_title,
-            None
-        )
+        update_user_stats(message.from_user.id, "recognized", 1)
+
+        # ===== Tarixga yozish =====
+        await log_download(message.from_user.id, {
+            "title": found_song,
+            "artist": shazam_artist,
+            "source": "shazam",
+        })
 
         # ===== YouTube qidiruvi =====
         results = await search_youtube(found_song, limit=1)
         if results:
-            user_search_results[message.from_user.id] = results
-            user_pages[message.from_user.id] = 0
             res = results[0]
-
             kb = make_song_action_kb(res["link"], res["title"], shazam_artist)
             caption = f"🎵 <b>{res['title']}</b>\n👤 {shazam_artist}\n✅ Topildi!"
+            await status_msg.delete()
+
             if res.get("thumbnail"):
                 await message.answer_photo(
                     res["thumbnail"],
