@@ -117,7 +117,3 @@ async def handle_audio_video(message: types.Message):
                     os.remove(path)
                 except:
                     pass
-
-
-# ✅ Bu qatorda import xatosini yo‘qotamiz
-audio_handlers = register_handlers
