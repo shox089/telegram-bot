@@ -1,4 +1,5 @@
-from aiogram import types
+from aiogram import types, F
+from aiogram.filters import Command
 from aiogram.types import FSInputFile
 from utils import DB_FILE
 import aiosqlite
@@ -6,6 +7,9 @@ import matplotlib.pyplot as plt
 import json
 import os
 
+# =======================
+# Profil ko‘rish handleri
+# =======================
 async def profile_command(message: types.Message):
     user_id = message.from_user.id
     async with aiosqlite.connect(DB_FILE) as db:
@@ -35,7 +39,7 @@ async def profile_command(message: types.Message):
     if genres:
         labels = list(genres.keys())
         sizes = list(genres.values())
-        fig, ax = plt.subplots(figsize=(5,3))
+        fig, ax = plt.subplots(figsize=(5, 3))
         ax.pie(sizes, labels=labels, autopct='%1.1f%%')
         ax.set_title("Eng ko'p tinglangan janrlar")
         chart_path = f"downloads/{user_id}_genres.png"
@@ -49,5 +53,8 @@ async def profile_command(message: types.Message):
     else:
         await message.answer(text, parse_mode="HTML")
 
+# =======================
+# Handler ro‘yxatdan o‘tkazish
+# =======================
 def register_handlers(dp):
-    dp.message.register(profile_command, commands=["profil"])
+    dp.message.register(profile_command, Command("profil"))  # ✅ Yangi usul
