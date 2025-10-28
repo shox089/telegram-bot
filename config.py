@@ -4,12 +4,11 @@ import os
 # 🔐 Muhit o'zgaruvchilari
 # ---------------------------
 API_TOKEN = os.getenv("API_TOKEN")  # Render Environment Variables orqali
-ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))  # Agar kiritilmasa 0 bo‘ladi
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "@default_admin")  # Render orqali yozilgan username
 
 # ---------------------------
 # 📁 Fayllar uchun xavfsiz saqlash joylari
 # ---------------------------
-# Render yozishga ruxsat beradigan joy
 BASE_DIR = "/opt/render/project/src"
 DATA_DIR = os.path.join(BASE_DIR, "data")
 DOWNLOAD_PATH = os.path.join(BASE_DIR, "downloads")
