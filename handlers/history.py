@@ -10,35 +10,33 @@ async def show_history(message: types.Message):
     try:
         user_id = str(message.from_user.id)
 
-        # 🔹 JSON log faylidan o‘qish
-        logs = load_json(LOG_FILE)
-        user_history = logs.get(user_id, [])
-
-        # Agar JSON bo‘sh bo‘lsa, SQL bazadan tekshirib ko‘ramiz
-        if not user_history:
-            async with aiosqlite.connect(DB_FILE) as db:
-                await db.execute("""
-                    CREATE TABLE IF NOT EXISTS history (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER,
-                        title TEXT,
-                        created_at TEXT
-                    )
-                """)
-                await db.commit()
-                cur = await db.execute(
-                    "SELECT title FROM history WHERE user_id = ? ORDER BY id DESC LIMIT 15",
-                    (user_id,)
+        # 🔹 Avval SQL bazadan o‘qiymiz
+        async with aiosqlite.connect(DB_FILE) as db:
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    title TEXT,
+                    created_at TEXT
                 )
-                user_history = [row[0] for row in await cur.fetchall()]
+            """)
+            cur = await db.execute(
+                "SELECT title FROM history WHERE user_id = ? ORDER BY id DESC LIMIT 15",
+                (user_id,)
+            )
+            sql_history = [row[0] for row in await cur.fetchall()]
 
-        # Agar hali ham bo‘sh bo‘lsa
-        if not user_history:
+        # 🔹 Agar SQL bo‘sh bo‘lsa — eski JSON tarixdan
+        if not sql_history:
+            logs = load_json(LOG_FILE)
+            sql_history = logs.get(user_id, [])
+
+        if not sql_history:
             await message.answer("📂 Sizda hali tarix mavjud emas.")
             return
 
         text = "📂 <b>Oxirgi topilgan yoki yuklab olingan qo‘shiqlaringiz:</b>\n\n"
-        for i, title in enumerate(reversed(user_history[-15:]), start=1):
+        for i, title in enumerate(reversed(sql_history[-15:]), start=1):
             text += f"{i}. {title}\n"
 
         clear_btn = InlineKeyboardMarkup(
@@ -59,13 +57,13 @@ async def clear_history(callback: types.CallbackQuery):
     try:
         user_id = str(callback.from_user.id)
 
-        # 🔹 JSON faylni tozalaymiz
+        # 🔹 JSONni tozalash
         logs = load_json(LOG_FILE)
         if user_id in logs:
             logs[user_id] = []
             save_json(LOG_FILE, logs)
 
-        # 🔹 SQL bazadagi tarixni ham tozalaymiz
+        # 🔹 SQL tarixni tozalash
         async with aiosqlite.connect(DB_FILE) as db:
             await db.execute("DELETE FROM history WHERE user_id = ?", (user_id,))
             await db.commit()
