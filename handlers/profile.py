@@ -1,36 +1,46 @@
-from aiogram import types
+from aiogram import types, F
 from aiogram.filters import Command
 from aiogram.types import FSInputFile
-from utils import DB_FILE, log_error
 import aiosqlite
 import matplotlib.pyplot as plt
 import json
 import os
+from utils import DB_FILE, log_error
+from config import DOWNLOAD_PATH
 
-# =======================
+os.makedirs(DOWNLOAD_PATH, exist_ok=True)
+
+
+# ===========================
 # 👤 Profilni ko‘rish
-# =======================
+# ===========================
 async def profile_command(message: types.Message):
+    """
+    Foydalanuvchining profil ma'lumotlarini chiqaradi:
+    - Topilgan qo‘shiqlar soni
+    - Eng ko‘p tinglangan ijrochi
+    - Oxirgi qo‘shiq
+    - Faollik
+    - Janrlar diagrammasi
+    """
     user_id = message.from_user.id
 
     try:
-        # Ma'lumotlarni olish
         async with aiosqlite.connect(DB_FILE) as db:
-            cur = await db.execute(
-                """
+            cursor = await db.execute("""
                 SELECT songs_found, top_artist, last_song, last_active, genres_json
                 FROM users
                 WHERE user_id = ?
-                """,
-                (user_id,)
-            )
-            row = await cur.fetchone()
+            """, (user_id,))
+            row = await cursor.fetchone()
 
         if not row:
             await message.answer("📊 Siz hali hech narsa qidirmagansiz.")
             return
 
         songs_found, top_artist, last_song, last_active, genres_json = row
+
+        # 🔹 Matn shakli
         text = (
             f"👤 <b>Profilingiz:</b>\n\n"
             f"🎧 Topilgan qo‘shiqlar: <b>{songs_found}</b>\n"
@@ -39,7 +49,7 @@ async def profile_command(message: types.Message):
             f"📅 Faollik: <b>{last_active or '—'}</b>\n"
         )
 
-        # Janrlar bo‘yicha diagramma
+        # 🔹 Janrlar diagrammasi
         genres = {}
         try:
             genres = json.loads(genres_json or "{}")
@@ -54,12 +64,12 @@ async def profile_command(message: types.Message):
             fig, ax = plt.subplots(figsize=(5, 3))
             ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
             ax.set_title("🎶 Eng ko‘p tinglangan janrlar")
-            chart_path = f"downloads/{user_id}_genres.png"
+            chart_path = os.path.join(DOWNLOAD_PATH, f"{user_id}_genres.png")
             fig.tight_layout()
             fig.savefig(chart_path)
             plt.close(fig)
 
-        # Natijani yuborish
+        # 🔹 Natijani yuborish
         if chart_path and os.path.exists(chart_path):
             await message.answer_photo(
                 FSInputFile(chart_path),
@@ -75,10 +85,12 @@ async def profile_command(message: types.Message):
         await message.answer("❌ Profil ma'lumotlarini olishda xatolik yuz berdi.")
 
 
-# =======================
-# 🔗 Handler ro‘yxatdan o‘tkazish
-# =======================
+# ===========================
+# 🔗 Handlerlarni ro‘yxatdan o‘tkazish
+# ===========================
 def register_handlers(dp):
-    # Foydalanuvchi /profil yoki 👤 Profil tugmasi yuborganda ishlaydi
+    """
+    Dispatcher orqali profil handlerini ro‘yxatdan o‘tkazadi
+    """
     dp.message.register(profile_command, Command("profil"))
     dp.message.register(profile_command, lambda m: m.text in ["👤 Profil", "Profil"])
