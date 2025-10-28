@@ -4,7 +4,8 @@ from aiogram import types, F
 from shazamio import Shazam
 from pydub import AudioSegment
 from bot import bot, dp, DOWNLOAD_PATH
-from utils import log_error, update_user_stats, make_song_action_kb, user_search_results, user_pages
+from utils import log_error, update_user_stats, user_search_results, user_pages
+from keyboards import make_song_action_kb
 from youtube import search_youtube  # ✅ To‘g‘ri joydan import
 
 # ================= HANDLERS =================
