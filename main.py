@@ -1,13 +1,10 @@
 import asyncio
-from aiogram import Bot, Dispatcher
-from config import API_TOKEN
+from bot import bot, dp  # 🔹 bot.py faylidan tayyor bot va dp ni import qilamiz
 from db import init_db
 from jobs import scheduler_start
 from handlers import start, search, choose, favorites, profile, history, admin, recommend, top_users
 from audio import audio_handlers
 
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
 
 # ---------------------------
 # Handlerlarni ro'yxatga olish
@@ -24,15 +21,18 @@ def register_all_handlers(dp):
     top_users.register_handlers(dp)
     audio_handlers.register_handlers(dp)
 
+
 async def on_startup():
     await init_db()
     register_all_handlers(dp)
     scheduler_start(bot)  # botni schedulerga uzatadi
 
+
 async def main():
     print("🤖 Bot ishga tushdi...")
     await on_startup()
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
