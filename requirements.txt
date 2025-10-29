@@ -1,8 +1,0 @@
-aiogram
-aiosqlite
-yt-dlp
-youtube-search-python
-shazamio
-pydub
-matplotlib
-apscheduler
