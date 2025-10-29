@@ -30,6 +30,9 @@ def main_reply_keyboard(current_username: str = None) -> ReplyKeyboardMarkup:
 # 🎵 Qo‘shiq uchun tugmalar (Tinglash / Sevimlilar / MP3)
 # ---------------------------
 def make_song_action_kb(youtube_url: str, title: str, artist: str = "Unknown") -> InlineKeyboardMarkup:
+    """
+    Inline tugmalar: Tinglash, Sevimlilarga qo‘shish, MP3 yuklab olish
+    """
     safe_title = title or "Unknown"
     safe_artist = artist or "Unknown"
     payload = quote_plus(f"{safe_title}|||{safe_artist}")
@@ -50,6 +53,9 @@ def make_song_action_kb(youtube_url: str, title: str, artist: str = "Unknown") -
 # ⏩ Qidiruv sahifalash (Oldingi / Keyingi)
 # ---------------------------
 def pagination_kb(current_page: int, total_pages: int) -> InlineKeyboardMarkup:
+    """
+    Sahifa almashtirish tugmalari
+    """
     buttons = []
     if current_page > 0:
         buttons.append(InlineKeyboardButton("⬅️ Oldingi", callback_data=f"page::{current_page - 1}"))
@@ -57,6 +63,7 @@ def pagination_kb(current_page: int, total_pages: int) -> InlineKeyboardMarkup:
         buttons.append(InlineKeyboardButton("➡️ Keyingi", callback_data=f"page::{current_page + 1}"))
     if not buttons:
         buttons.append(InlineKeyboardButton("🔁 Yangilash", callback_data="refresh_results"))
+
     return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
 
@@ -64,6 +71,9 @@ def pagination_kb(current_page: int, total_pages: int) -> InlineKeyboardMarkup:
 # 🗑 Tasdiqlovchi tugmalar
 # ---------------------------
 def confirm_clear_kb(action: str) -> InlineKeyboardMarkup:
+    """
+    Foydalanuvchidan amalni tasdiqlashni so‘raydi
+    """
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton("✅ Ha", callback_data=f"confirm::{action}"),
