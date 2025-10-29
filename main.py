@@ -1,11 +1,11 @@
 import asyncio
-from bot import bot, dp  # 🔹 bot.py faylidan tayyor bot va dp ni import qilamiz
+from bot import bot, dp
 from db import init_db
 from jobs import scheduler_start
 from handlers import (
     start, search, choose, favorites, profile, history, admin, recommend, top_users
 )
-from audio import register_handlers as register_audio_handlers  # ✅ audio handlerlari
+from audio import register_handlers as register_audio_handlers
 
 
 # ---------------------------
@@ -21,22 +21,32 @@ def register_all_handlers(dp):
     admin.register_handlers(dp)
     recommend.register_handlers(dp)
     top_users.register_handlers(dp)
-    register_audio_handlers(dp)  # ✅ audio handlerlar endi to‘g‘ri chaqiriladi
+    register_audio_handlers(dp)
 
 
 # ---------------------------
 # Bot ishga tushirish funksiyalari
 # ---------------------------
 async def on_startup():
-    await init_db()  # ✅ DB ni ishga tushirish
-    register_all_handlers(dp)  # ✅ Handlerlarni ro'yxatga olish
-    scheduler_start(bot)  # ✅ Scheduler ishga tushadi
+    print("🔄 DB va handlerlar ishga tushmoqda...")
+    await init_db()
+    register_all_handlers(dp)
+    scheduler_start(bot)
+    print("✅ Bot tayyor")
+
+
+async def on_shutdown():
+    await bot.session.close()
+    print("🛑 Bot to‘xtadi")
 
 
 async def main():
     print("🤖 Bot ishga tushdi...")
-    await on_startup()
-    await dp.start_polling(bot)  # ✅ Pollingni boshlash
+    await dp.start_polling(
+        bot,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown
+    )
 
 
 if __name__ == "__main__":
