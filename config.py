@@ -7,6 +7,11 @@ API_TOKEN = os.getenv("API_TOKEN")  # Render Environment Variables orqali
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "@default_admin")  # Render orqali yozilgan username
 
 # ---------------------------
+# 🔢 Sahifalash sozlamalari
+# ---------------------------
+RESULTS_PER_PAGE = 5  # Har sahifada nechta natija ko‘rsatiladi
+
+# ---------------------------
 # 📁 Fayllar uchun xavfsiz saqlash joylari
 # ---------------------------
 BASE_DIR = "/opt/render/project/src"
