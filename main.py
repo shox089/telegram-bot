@@ -54,11 +54,10 @@ async def on_shutdown():
 # ---------------------------
 async def main():
     print("🤖 Bot ishga tushdi...")
-    await dp.start_polling(
-        bot,
-        on_startup=on_startup,
-        on_shutdown=on_shutdown
-    )
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await on_shutdown()
 
 
 if __name__ == "__main__":
