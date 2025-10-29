@@ -4,6 +4,7 @@ from datetime import datetime
 from config import DB_FILE
 from utils import log_error
 
+
 async def init_db():
     """DB jadvalini yaratadi, agar mavjud bo'lmasa."""
     try:
@@ -33,7 +34,8 @@ async def init_db():
     except Exception as e:
         log_error(f"init_db error: {e}")
 
-async def update_user_stats(user_id, username, artist, title, genre=None):
+
+async def update_user_stats(user_id: int, username: str, artist: str, title: str, genre: str = None):
     """
     Foydalanuvchi statistikasini yangilaydi:
     - topilgan qo‘shiqlar soni
@@ -49,12 +51,14 @@ async def update_user_stats(user_id, username, artist, title, genre=None):
             )
             row = await cur.fetchone()
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             if row:
                 songs_found, top_artist, genres_json = row
                 songs_found += 1
                 genres = json.loads(genres_json or "{}")
                 if genre:
                     genres[genre] = genres.get(genre, 0) + 1
+
                 await db.execute("""
                     UPDATE users 
                     SET songs_found=?, top_artist=?, last_song=?, last_active=?, genres_json=?
@@ -66,6 +70,7 @@ async def update_user_stats(user_id, username, artist, title, genre=None):
                     INSERT INTO users (user_id, username, songs_found, top_artist, last_song, last_active, genres_json)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, (user_id, username, 1, artist, title, now, json.dumps(genres, ensure_ascii=False)))
+
             await db.commit()
     except Exception as e:
         log_error(f"update_user_stats error: {e}")
