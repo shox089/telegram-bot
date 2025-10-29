@@ -6,7 +6,9 @@ from aiogram import types
 from utils import clean_filename, log_error, log_download
 from config import DOWNLOAD_PATH
 
-# Yuklash papkasini yaratish
+# ---------------------------
+# 📁 Yuklash papkasini yaratish
+# ---------------------------
 os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
 
