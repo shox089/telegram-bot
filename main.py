@@ -5,7 +5,7 @@ from jobs import scheduler_start
 from handlers import (
     start, search, choose, favorites, profile, history, admin, recommend, top_users
 )
-from audio import register_handlers as register_audio_handlers  # ✅ to‘g‘rilandi
+from audio import register_handlers as register_audio_handlers  # ✅ audio handlerlari
 
 
 # ---------------------------
@@ -21,22 +21,22 @@ def register_all_handlers(dp):
     admin.register_handlers(dp)
     recommend.register_handlers(dp)
     top_users.register_handlers(dp)
-    register_audio_handlers(dp)  # ✅ endi to‘g‘ri chaqiriladi
+    register_audio_handlers(dp)  # ✅ audio handlerlar endi to‘g‘ri chaqiriladi
 
 
 # ---------------------------
 # Bot ishga tushirish funksiyalari
 # ---------------------------
 async def on_startup():
-    await init_db()
-    register_all_handlers(dp)
-    scheduler_start(bot)  # botni schedulerga uzatadi
+    await init_db()  # ✅ DB ni ishga tushirish
+    register_all_handlers(dp)  # ✅ Handlerlarni ro'yxatga olish
+    scheduler_start(bot)  # ✅ Scheduler ishga tushadi
 
 
 async def main():
     print("🤖 Bot ishga tushdi...")
     await on_startup()
-    await dp.start_polling(bot)
+    await dp.start_polling(bot)  # ✅ Pollingni boshlash
 
 
 if __name__ == "__main__":
