@@ -5,7 +5,7 @@ import aiosqlite
 from datetime import datetime
 
 # ---------------------------
-# Ma'lumotlar uchun xavfsiz papka
+# 📁 Ma'lumotlar uchun xavfsiz papka
 # ---------------------------
 DATA_DIR = "/opt/render/project/src/data"
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -16,23 +16,26 @@ LOG_FILE = os.path.join(DATA_DIR, "downloads.json")
 USER_FILE = os.path.join(DATA_DIR, "users.json")
 ERROR_LOG = os.path.join(DATA_DIR, "errors.log")
 
+
 # ---------------------------
-# Xatoliklarni log qilish
+# 🛑 Xatoliklarni log qilish
 # ---------------------------
 def log_error(msg: str):
     """Xatoliklarni ERROR_LOG fayliga yozadi"""
     with open(ERROR_LOG, "a", encoding="utf-8") as f:
         f.write(f"[{datetime.now().isoformat()}] {msg}\n")
 
+
 # ---------------------------
-# Fayl nomini tozalash
+# 📝 Fayl nomini tozalash
 # ---------------------------
 def clean_filename(name: str) -> str:
     """Fayl nomida ruxsat etilmagan belgilarni olib tashlaydi"""
     return re.sub(r'[\\/*?:"<>|]', "", name) if name else "unknown"
 
+
 # ---------------------------
-# JSON yuklash/saqlash
+# 🔄 JSON yuklash/saqlash
 # ---------------------------
 def load_json(path):
     if not os.path.exists(path):
@@ -51,8 +54,9 @@ def save_json(path, data):
     except Exception as e:
         log_error(f"JSON save error ({path}): {e}")
 
+
 # ---------------------------
-# Foydalanuvchi statistikasi
+# 👤 Foydalanuvchi statistikasi
 # ---------------------------
 def update_user_stats(user_id: int, key: str, increment: int = 1):
     users = load_json(USER_FILE)
@@ -62,8 +66,9 @@ def update_user_stats(user_id: int, key: str, increment: int = 1):
     users[str_id]["stats"][key] = users[str_id]["stats"].get(key, 0) + increment
     save_json(USER_FILE, users)
 
+
 # ---------------------------
-# YouTube qidiruv natijalari
+# 🔍 YouTube qidiruv natijalari (session-level)
 # ---------------------------
 user_search_results_data = {}
 
@@ -83,15 +88,17 @@ def show_results(user_id: int, page: int = 0):
         return pages[0]
     return pages[page]
 
+
 # ---------------------------
-# Fayllarni yaratish
+# ⚡ Fayllarni yaratish
 # ---------------------------
 for file in [LOG_FILE, USER_FILE]:
     if not os.path.exists(file):
         save_json(file, {})
 
+
 # ---------------------------
-# Yuklashlarni log qilish (JSON + SQL)
+# 💾 Yuklashlarni log qilish (JSON + SQL)
 # ---------------------------
 async def log_download(user_id: int, item: dict):
     """Yuklashlarni JSON va SQL bazaga yozadi"""
