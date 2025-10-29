@@ -76,7 +76,7 @@ async def handle_audio_video(message: types.Message):
         found_song = f"{shazam_artist} - {shazam_title}"
 
         # ===== Statistikani yangilash =====
-        update_user_stats(message.from_user.id, "recognized", 1)
+        await update_user_stats(message.from_user.id, message.from_user.username, shazam_artist, shazam_title)
 
         # ===== Tarixga yozish =====
         await log_download(message.from_user.id, {
@@ -115,5 +115,5 @@ async def handle_audio_video(message: types.Message):
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
-                except:
-                    pass
+                except Exception as e:
+                    log_error(f"File delete error: {e}")
