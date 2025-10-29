@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import load_json, save_json, log_error
 from keyboards import main_reply_keyboard
-from config import ADMIN_ID
+from config import ADMIN_USERNAME
 import os
 import json
 
@@ -14,6 +14,7 @@ import json
 async def start_cmd(message: types.Message):
     try:
         user_id = str(message.from_user.id)
+        username = message.from_user.username or ""  # Telegram username
         users_file = "users.json"
 
         # Fayl mavjud bo‘lmasa, yaratamiz
@@ -36,7 +37,7 @@ async def start_cmd(message: types.Message):
             return
 
         # Eski foydalanuvchi — asosiy menyu
-        kb_main = main_reply_keyboard(is_admin=(message.from_user.id == ADMIN_ID))
+        kb_main = main_reply_keyboard(current_username=username)
         await message.answer("👋 Salom! Nima qilamiz?", reply_markup=kb_main)
 
     except Exception as e:
@@ -51,6 +52,7 @@ async def set_language(callback: types.CallbackQuery):
     try:
         lang = callback.data.split("_")[1]
         user_id = str(callback.from_user.id)
+        username = callback.from_user.username or ""
 
         users = load_json("users.json")
         users[user_id] = users.get(user_id, {})
@@ -58,7 +60,7 @@ async def set_language(callback: types.CallbackQuery):
         save_json("users.json", users)
 
         # Asosiy menyuga qaytamiz
-        kb_main = main_reply_keyboard(is_admin=(callback.from_user.id == ADMIN_ID))
+        kb_main = main_reply_keyboard(current_username=username)
         await callback.message.edit_text("✅ Til saqlandi! Endi asosiy menyuga qayting.")
         await callback.message.answer("👋 Salom! Nima qilamiz?", reply_markup=kb_main)
         await callback.answer()
