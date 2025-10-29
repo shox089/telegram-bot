@@ -12,6 +12,9 @@ from audio import register_handlers as register_audio_handlers
 # Handlerlarni ro'yxatga olish
 # ---------------------------
 def register_all_handlers(dp):
+    """
+    Barcha handlerlarni ro'yxatga oladi.
+    """
     start.register_handlers(dp)
     search.register_handlers(dp)
     choose.register_handlers(dp)
@@ -28,6 +31,9 @@ def register_all_handlers(dp):
 # Bot ishga tushirish funksiyalari
 # ---------------------------
 async def on_startup():
+    """
+    DB, handlerlar va scheduler ishga tushiriladi.
+    """
     print("🔄 DB va handlerlar ishga tushmoqda...")
     await init_db()
     register_all_handlers(dp)
@@ -36,10 +42,16 @@ async def on_startup():
 
 
 async def on_shutdown():
+    """
+    Botni to‘xtatish va sessiyalarni yopish.
+    """
     await bot.session.close()
     print("🛑 Bot to‘xtadi")
 
 
+# ---------------------------
+# Asosiy funksiyani ishga tushirish
+# ---------------------------
 async def main():
     print("🤖 Bot ishga tushdi...")
     await dp.start_polling(
