@@ -1,5 +1,6 @@
 import os
 from aiogram import Bot, Dispatcher
+from aiogram.types import DefaultBotProperties
 from config import API_TOKEN, DOWNLOAD_PATH as CONFIG_DOWNLOAD_PATH
 
 # ---------------------------
@@ -11,5 +12,8 @@ os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 # ---------------------------
 # 🤖 Bot va Dispatcher
 # ---------------------------
-bot = Bot(token=API_TOKEN, parse_mode="HTML")
+bot = Bot(
+    token=API_TOKEN,
+    default=DefaultBotProperties(parse_mode="HTML")  # ✅ parse_mode endi shu tarzda beriladi
+)
 dp = Dispatcher()
