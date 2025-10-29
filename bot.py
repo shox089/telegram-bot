@@ -1,12 +1,11 @@
 import os
 from aiogram import Bot, Dispatcher
-from aiogram.types import DefaultBotProperties
 from config import API_TOKEN, DOWNLOAD_PATH as CONFIG_DOWNLOAD_PATH
 
 # ---------------------------
 # 📁 Yuklab olishlar uchun papka
 # ---------------------------
-DOWNLOAD_PATH = CONFIG_DOWNLOAD_PATH  # config.py da aniqlangan papka
+DOWNLOAD_PATH = CONFIG_DOWNLOAD_PATH
 os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
 # ---------------------------
@@ -14,6 +13,6 @@ os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 # ---------------------------
 bot = Bot(
     token=API_TOKEN,
-    default=DefaultBotProperties(parse_mode="HTML")  # ✅ parse_mode endi shu tarzda beriladi
+    default={"parse_mode": "HTML"}  # ✅ faqat lug‘at tarzida
 )
 dp = Dispatcher()
