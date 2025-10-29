@@ -1,0 +1,5 @@
+aiogram==3.1.0
+yt-dlp
+youtubesearchpython
+shazamio
+pydub
