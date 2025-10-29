@@ -2,7 +2,7 @@ from aiogram import types, F
 from youtube import search_youtube
 from utils import user_search_results, show_results, log_error
 from keyboards import make_song_action_kb, pagination_kb
-from config import RESULTS_PER_PAGE
+from config import RESULTS_PER_PAGE  # ✅ config.py faylida aniqlangan bo'lishi kerak
 
 # ===========================
 # 🔍 YouTube qidiruv handler
@@ -65,6 +65,7 @@ async def show_results_page(message_or_callback, user_id: int, page: int):
     # Pagination tugmalari
     keyboard = pagination_kb(page, total_pages)
 
+    # Xabar turi Message yoki CallbackQuery bo'lishiga qarab javob
     if isinstance(message_or_callback, types.Message):
         await message_or_callback.answer(text, parse_mode="HTML", reply_markup=keyboard)
     else:
